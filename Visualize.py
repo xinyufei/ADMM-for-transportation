@@ -13,7 +13,7 @@ for single_line in all_lines:
     veh_num_matrix.append([float(val) for val in split_info[:-1]])
 
 plt.figure()
-plt.imshow(veh_num_matrix, aspect="auto", cmap="binary")
+plt.imshow(veh_num_matrix, aspect="auto", cmap="binary", vmin=0, vmax=10)
 plt.colorbar()
 
 plt.xlabel("time")
