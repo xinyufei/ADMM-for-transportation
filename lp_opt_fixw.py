@@ -24,8 +24,9 @@ for t in range(15):
 m = gb.Model()
 y = m.addVars(len(C_ALL), T, lb=0, vtype=gb.GRB.CONTINUOUS)
 n = m.addVars(len(C_ALL), T+1, lb=0, vtype=gb.GRB.CONTINUOUS)
-m.setObjective(gb.quicksum(gb.quicksum(t * y[c,t] for c in D_ALL) for t in range(T))
-        + alpha * gb.quicksum(gb.quicksum(t* y[c,t] for c in list(set(C_ALL)-set(D_ALL))) for t in range(T)), gb.GRB.MINIMIZE)
+# m.setObjective(gb.quicksum(gb.quicksum(t * y[c,t] for c in D_ALL) for t in range(T))
+#        + alpha * gb.quicksum(gb.quicksum(t* y[c,t] for c in list(set(C_ALL)-set(D_ALL))) for t in range(T)), gb.GRB.MINIMIZE)
+m.setObjective(alpha * gb.quicksum(gb.quicksum((T-t) * y[c,t] for c in list(set(C_ALL)-set(D_ALL))) for t in range(T)), gb.GRB.MINIMIZE)
 
 m.addConstrs(y[c,t]-n[c,t]<=0 for c in C_ALL for t in range(T))
 m.addConstrs(y[c,t]<=Q[c] for c in list(set(C_ALL)-set(I1_ALL)-set(I2_ALL)-set(I3_ALL)-set(I4_ALL)-set(D_ALL)) for t in range(T))
@@ -58,7 +59,7 @@ for i in range(len(C_ALL)):
 f = open('log/n.log', 'w+')
 for i in range(len(C_ALL)):
     for t in range(T):
-        print(result_n[i, t], end="   ", file=f)
+        print(result_n[i, t], end=",", file=f)
     print("\n", file=f)
 f.close()
 
