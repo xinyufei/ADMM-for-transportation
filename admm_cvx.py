@@ -553,8 +553,8 @@ class ADMM:
         T = self.data['opt_time']
         n = cp.Variable((len(C), T+1))
         y = cp.Variable((len(C), T))
-        w = cp.Variable((self.data['phases'],T),boolean=True)
-        # w = cp.Variable((self.data['phases'],T))   #relax the binary variable
+        # w = cp.Variable((self.data['phases'],T),boolean=True)
+        w = cp.Variable((self.data['phases'],T))   #relax the binary variable
         u = cp.Variable(T-1)
         s = cp.Variable((len(BO),T))
 
@@ -592,31 +592,6 @@ class ADMM:
         + sum_squares(y[BO,:] + s - np.repeat(self.data['ratio_W']*Jam_N.reshape([-1,1])[BO], T, axis = 1) + self.data['ratio_W']* out_extra_xi_n[:,0:T] + lamb)
         + sum_squares(n[BI,1:T+1] - n[BI,0:T] + y[BI,:] - in_extra_xi_y + mu))
 
-        """ for i in range(len(V)):
-            if beta[0,i] < 0.0000001:
-                norm1 = norm1 + np.sum(square(beta[1,i]*y[V[i],t] + self.data['ratio_W']*n[V[i]+1,t] + zeta_41[i,t] - self.data['ratio_W'] * Jam_N[V[i]] + kappa_41[i,t]) for t in range(T)) \
-                + np.sum(square(beta[2,i]*y[V[i],t] + self.data['ratio_W']*n[V[i]+2,t] + zeta_42[i,t] - self.data['ratio_W'] * Jam_N[V[i]] + kappa_42[i,t]) for t in range(T)) \
-                + np.sum(square(y[V[i],t] + zeta_22[i,t] - Q[V[i]+1]/beta[1,i] + kappa_22[i,t]) for t in range(T)) \
-                + np.sum(square(y[V[i],t] + zeta_23[i,t] - Q[V[i]+2]/beta[2,i] + kappa_23[i,t]) for t in range(T))
-                continue
-            if beta[1,i] < 0.0000001:
-                norm1 = norm1 + np.sum(square(beta[0,i]*y[V[i],t] + self.data['ratio_W']*n[V[i]+1,t] + zeta_41[i,t] - self.data['ratio_W'] * Jam_N[V[i]] + kappa_41[i,t]) for t in range(T)) \
-                + np.sum(square(beta[2,i]*y[V[i],t] + self.data['ratio_W']*n[V[i]+2,t] + zeta_42[i,t] - self.data['ratio_W'] * Jam_N[V[i]] + kappa_42[i,t]) for t in range(T)) \
-                + np.sum(square(y[V[i],t] + zeta_22[i,t] - Q[V[i]+1]/beta[0,i] + kappa_22[i,t]) for t in range(T)) \
-                + np.sum(square(y[V[i],t] + zeta_23[i,t] - Q[V[i]+2]/beta[2,i] + kappa_23[i,t]) for t in range(T))
-                continue
-            if beta[2,i] < 0.0000001:
-                norm1 = norm1 + np.sum(square(beta[0,i]*y[V[i],t] + self.data['ratio_W']*n[V[i]+1,t] + zeta_41[i,t] - self.data['ratio_W'] * Jam_N[V[i]] + kappa_41[i,t]) for t in range(T)) \
-                + np.sum(square(beta[1,i]*y[V[i],t] + self.data['ratio_W']*n[V[i]+2,t] + zeta_42[i,t] - self.data['ratio_W'] * Jam_N[V[i]] + kappa_42[i,t]) for t in range(T)) \
-                + np.sum(square(y[V[i],t] + zeta_22[i,t] - Q[V[i]+1]/beta[0,i] + kappa_22[i,t]) for t in range(T)) \
-                + np.sum(square(y[V[i],t] + zeta_23[i,t] - Q[V[i]+2]/beta[1,i] + kappa_23[i,t]) for t in range(T))
-                continue
-            norm1 = norm1 + np.sum(square(beta[0,i]*y[V[i],t] + self.data['ratio_W']*n[V[i]+1,t] + zeta_41[i,t] - self.data['ratio_W'] * Jam_N[V[i]] + kappa_41[i,t]) for t in range(T)) \
-            + np.sum(square(beta[1,i]*y[V[i],t] + self.data['ratio_W']*n[V[i]+2,t] + zeta_42[i,t] - self.data['ratio_W'] * Jam_N[V[i]] + kappa_42[i,t]) for t in range(T)) \
-            + np.sum(square(beta[2,i]*y[V[i],t] + self.data['ratio_W']*n[V[i]+3,t] + zeta_43[i,t] - self.data['ratio_W'] * Jam_N[V[i]] + kappa_43[i,t]) for t in range(T)) \
-            + np.sum(square(y[V[i],t] + zeta_22[i,t] - Q[V[i]+1]/beta[0,i] + kappa_22[i,t]) for t in range(T)) \
-            + np.sum(square(y[V[i],t] + zeta_23[i,t] - Q[V[i]+2]/beta[1,i] + kappa_23[i,t]) for t in range(T)) \
-            + np.sum(square(y[V[i],t] + zeta_24[i,t] - Q[V[i]+3]/beta[2,i] + kappa_24[i,t]) for t in range(T)) """
         norm1 = (norm1 + np.sum(np.sum(square(beta[0,i]*y[V[i],t] + self.data['ratio_W']*n[[V[i]+1],t] + zeta_41[i,t] - self.data['ratio_W'] * Jam_N[V[i]] + kappa_41[i,t]) for i in range(len(V))) for t in range(T))
                     + np.sum(np.sum(square(beta[1,i]*y[V[i],t] + self.data['ratio_W']*n[[V[i]+2],t] + zeta_42[i,t] - self.data['ratio_W'] * Jam_N[V[i]] + kappa_42[i,t]) for i in range(len(V))) for t in range(T))
                     + sum_squares(y[V,:] + zeta_22 - np.repeat(Q.reshape([-1,1])[[c+1 for c in V]]/beta[0,:].reshape([-1,1]), T, axis = 1) + kappa_22)
@@ -625,9 +600,7 @@ class ADMM:
         if beta.shape[0] == 3:
             norm1 = (norm1 + np.sum(np.sum(square(beta[2,i]*y[V[i],t] + self.data['ratio_W']*n[[V[i]+3],t] + zeta_43[i,t] - self.data['ratio_W'] * Jam_N[V[i]] + kappa_43[i,t]) for i in range(len(V))) for t in range(T))
                     + sum_squares(y[V,:] + zeta_24 - np.repeat(Q.reshape([-1,1])[[c+3 for c in V]]/beta[2,:].reshape([-1,1]), T, axis = 1) + kappa_24))
-        """ norm1 = (norm1 + sum_squares(beta[0,i]*y[V[i],:] + self.data['ratio_W']*n[V[i]+1,0:T] + zeta_41[i,:] - self.data['ratio_W'] * Jam_N[V[i]] + kappa_41[i,:] for i in range(len(V)))
-                    + sum_squares(beta[1,i]*y[V[i],:] + self.data['ratio_W']*n[V[i]+2,0:T] + zeta_42[i,:] - self.data['ratio_W'] * Jam_N[V[i]] + kappa_42[i,:] for i in range(len(V)))
-                    + sum_squares(beta[2,i]*y[V[i],:] + self.data['ratio_W']*n[V[i]+3,0:T] + zeta_43[i,:] - self.data['ratio_W'] * Jam_N[V[i]] + kappa_43[i,:] for i in range(len(V))))"""
+     
        
         objective = cp.Minimize(f_i + self.data['rho']/2 * norm1)
         constraints = [n[O,1:T+1] - n[O,0:T] + y[O,0:T] == Demand]
@@ -1046,26 +1019,6 @@ class ADMM:
     def residual(self):
         # return LA.norm(self.y[i] - self.n[i][:,range(self.data['opt_time'])] + self.zeta_1[i])
         T = self.data['opt_time']
-        """res_1 = [None]*self.data['num_inter']
-        res_21 = np.zeros(self.data['num_inter'])
-        res_22 = np.zeros(self.data['num_inter'])
-        res_23 = np.zeros(self.data['num_inter'])
-        res_24 = np.zeros(self.data['num_inter'])
-        res_31 = np.zeros(self.data['num_inter'])
-        res_32 = np.zeros(self.data['num_inter'])
-        res_33 = np.zeros(self.data['num_inter'])
-        res_34 = np.zeros(self.data['num_inter'])
-        res_41 = np.zeros(self.data['num_inter'])
-        res_42 = np.zeros(self.data['num_inter'])
-        res_43 = np.zeros(self.data['num_inter'])
-        res_5 = np.zeros(self.data['num_inter'])
-        res_6 = np.zeros(self.data['num_inter'])
-        res_7 = np.zeros(self.data['num_inter'])
-        res_8 = np.zeros(self.data['num_inter'])
-        res_9 = np.zeros(self.data['num_inter'])
-        res_10 = np.zeros(self.data['num_inter'])
-        res_11 = np.zeros(self.data['num_inter'])
-        res_12 = np.zeros(self.data['num_inter'])"""
         res = np.zeros(self.data['num_inter'])
         for inter in range(self.data['num_inter']):
             I1 = self.data['I1'][inter]
@@ -1089,38 +1042,7 @@ class ADMM:
             beta = self.data['beta'][inter]
             proc = self.data['proc'][inter]
             new_w = self.w[inter][0,] + self.w[inter][1,]
-            """res[inter] = (np.sum((self.y[inter] - self.n[inter][:,range(self.data['opt_time'])] + self.zeta_1[inter])**2)
-            + np.sum((self.y[inter][EO,:] + self.zeta_21[inter] - np.repeat(Q.reshape([-1,1])[EO], T, axis = 1))**2)
-            + np.sum((self.y[inter][V] + self.zeta_22[inter] - np.repeat(Q.reshape([-1,1])[[c+1 for c in V]]/beta[0,:].reshape([-1,1]), T, axis = 1))**2)
-            + np.sum((self.y[inter][V] + self.zeta_23[inter] - np.repeat(Q.reshape([-1,1])[[c+2 for c in V]]/beta[1,:].reshape([-1,1]), T, axis = 1))**2)
-            + np.sum((self.y[inter][I1,] - np.repeat(self.w[inter][0,].reshape([1,-1]), len(I1), axis = 0) * np.repeat(Q.reshape([-1,1])[I1], T, axis = 1) + self.zeta_31[inter])**2)
-            + np.sum((self.y[inter][I2,] - np.repeat(self.w[inter][1,].reshape([1,-1]), len(I2), axis = 0) * np.repeat(Q.reshape([-1,1])[I2], T, axis = 1) + self.zeta_32[inter])**2)
-            + np.sum((self.y[inter][I3,] - np.repeat(self.w[inter][2,].reshape([1,-1]), len(I3), axis = 0) * np.repeat(Q.reshape([-1,1])[I3], T, axis = 1) + self.zeta_33[inter])**2)
-            + np.sum((self.y[inter][I4,] - np.repeat(self.w[inter][3,].reshape([1,-1]), len(I4), axis = 0) * np.repeat(Q.reshape([-1,1])[I4], T, axis = 1) + self.zeta_34[inter])**2)
-            + np.sum((np.repeat(beta[0,].reshape([-1,1]), T, axis=1)*self.y[inter][V,:] + self.data['ratio_W']* self.n[inter][[x+1 for x in V],0:T] - np.repeat(self.data['ratio_W'] * Jam_N.reshape([-1,1])[V], T, axis = 1) + self.zeta_41[inter])**2)
-            + np.sum((np.repeat(beta[1,].reshape([-1,1]), T, axis=1)*self.y[inter][V,:] + self.data['ratio_W']* self.n[inter][[x+1 for x in V],0:T] - np.repeat(self.data['ratio_W'] * Jam_N.reshape([-1,1])[V], T, axis = 1) + self.zeta_42[inter])**2)
-            # res[inter] = res[inter] + (np.sum((self.y[inter][OI,] + self.data['ratio_W'] * self.n[inter][[proc[x] for x in OI],0:T] - np.repeat(self.data['ratio_W']* Jam_N.reshape([-1,1])[OI], T, axis = 1) + self.zeta_5[inter])**2)
-            + np.sum((self.y[inter][OI,] + self.data['ratio_W'] * self.n[inter][[proc[x] for x in OI],0:T] - np.repeat(self.data['ratio_W']* Jam_N.reshape([-1,1])[OI], T, axis = 1) + self.zeta_5[inter])**2)
-            + np.sum((new_w[1:T] - new_w[0:T-1] - self.u[inter][0:T-1] + self.zeta_6[inter])**2)
-            + np.sum((-new_w[1:T] + new_w[0:T-1] - self.u[inter][0:T-1] + self.zeta_7[inter])**2)
-            + np.sum((-new_w[1:T] - new_w[0:T-1] + self.u[inter][0:T-1] + self.zeta_8[inter])**2)
-            + np.sum((new_w[1:T] + new_w[0:T-1] + self.u[inter][0:T-1] -2 + self.zeta_9[inter])**2)
-            + np.sum((self.u[inter][0:T-4] + self.u[inter][1:T-3] + self.u[inter][2:T-2] + self.u[inter][3:T-1] -1 + self.zeta_10[inter])**2)
-            + np.sum((new_w[0:T-7] + new_w[1:T-6] + new_w[2:T-5] + new_w[3:T-4] + new_w[4:T-3] + new_w[5:T-2] + new_w[6:T-1] + new_w[7:T] -8 + self.zeta_11[inter])**2)
-            + np.sum((-new_w[0:T-7] - new_w[1:T-6] - new_w[2:T-5] - new_w[3:T-4] - new_w[4:T-3]  - new_w[5:T-2] - new_w[6:T-1] - new_w[7:T] +1 + self.zeta_12[inter])**2))
-            if beta.shape[0] == 3:
-                res[inter] = (res[inter] + np.sum((self.y[inter][V] + self.zeta_24[inter] - np.repeat(Q.reshape([-1,1])[[c+3 for c in V]]/beta[2,:].reshape([-1,1]), T, axis = 1))**2)
-                + np.sum((np.repeat(beta[2,].reshape([-1,1]), T, axis=1)*self.y[inter][V,:] + self.data['ratio_W']* self.n[inter][[x+1 for x in V],0:T] - np.repeat(self.data['ratio_W'] * Jam_N.reshape([-1,1])[V], T, axis = 1) + self.zeta_43[inter])**2))
-        return np.sqrt(sum_squares(sum(res_1[i] for i in range(self.data['num_inter']))) + sum_squares(sum(res_21[i] for i in range(self.data['num_inter'])))
-        + sum_squares(sum(res_22[i] for i in range(self.data['num_inter']))) + sum_squares(sum(res_23[i] for i in range(self.data['num_inter'])))
-        + sum_squares(sum(res_24[i] for i in range(self.data['num_inter']))) + sum_squares(sum(res_31[i] for i in range(self.data['num_inter'])))
-        + sum_squares(sum(res_32[i] for i in range(self.data['num_inter']))) + sum_squares(sum(res_33[i] for i in range(self.data['num_inter'])))
-        + sum_squares(sum(res_34[i] for i in range(self.data['num_inter']))) + sum_squares(sum(res_41[i] for i in range(self.data['num_inter'])))
-        + sum_squares(sum(res_42[i] for i in range(self.data['num_inter']))) +sum_squares(sum(res_43[i] for i in range(self.data['num_inter'])))
-        + sum_squares(sum(res_5[i] for i in range(self.data['num_inter']))) + sum_squares(sum(res_6[i] for i in range(self.data['num_inter'])))
-        + sum_squares(sum(res_7[i] for i in range(self.data['num_inter']))) + sum_squares(sum(res_8[i] for i in range(self.data['num_inter'])))
-        + sum_squares(sum(res_9[i] for i in range(self.data['num_inter']))) + sum_squares(sum(res_10[i] for i in range(self.data['num_inter'])))
-        + sum_squares(sum(res_11[i] for i in range(self.data['num_inter']))) + sum_squares(sum(res_12[i] for i in range(self.data['num_inter'])))) """
+            
             res_temp = max([LA.norm(self.y[inter] - self.n[inter][:,range(self.data['opt_time'])] + self.zeta_1[inter]), 
             LA.norm(self.y[inter][EO,:] + self.zeta_21[inter] - np.repeat(Q.reshape([-1,1])[EO], T, axis = 1)), 
             LA.norm(self.y[inter][V] + self.zeta_22[inter] - np.repeat(Q.reshape([-1,1])[[c+1 for c in V]]/beta[0,:].reshape([-1,1]), T, axis = 1)),
