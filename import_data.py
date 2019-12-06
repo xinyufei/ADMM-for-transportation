@@ -3,7 +3,7 @@ import xlrd
 import numpy as np
 # specify the traffic network in plymouth road
 num_iterations = 1000
-T = 240
+T = 8
 N = 6 # number of intersetions
  
  
