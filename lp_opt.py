@@ -93,7 +93,7 @@ for i in range(N):
     for j in range(4):
         for t in range(T):
             print(result_w[i, j, t], end=",", file=f)
-    print("\n", file=f)
+        print("\n", file=f)
 f.close()"""
 
 
