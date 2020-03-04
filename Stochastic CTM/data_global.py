@@ -2,7 +2,7 @@ import numpy as np
 import gurobipy as gb
 from data import Network
 
-sample_size = 10
+sample_size = 1
 N_edge = 4
 network_data = Network(N_edge, True, sample_size)
 N = network_data.N
@@ -26,6 +26,7 @@ Q = network_data.Q
 W = network_data.W 
 alpha = network_data.alpha
 beta = network_data.beta
+n_init = network_data.n_init
 
 add=np.zeros(N)
 add[0] = 0
@@ -48,6 +49,7 @@ I4_ALL = I4[0]
 Demand_ALL = Demand[0]
 Q_ALL = Q[0]
 Jam_N_ALL = Jam_N[0]
+n_init_all = n_init[0]
 for i in range(1,N):
     O_ALL = O_ALL + [int(d+add[i]) for d in O[i]]
     D_ALL = D_ALL + [int(d+add[i]) for d in D[i]]
@@ -62,7 +64,7 @@ for i in range(1,N):
     Demand_ALL = Demand_ALL + [int(de) for de in Demand[i]]
     Q_ALL = np.hstack((Q_ALL, Q[i]))
     Jam_N_ALL = np.hstack((Jam_N_ALL, Jam_N[i]))
-
+    n_init_all = np.concatenate((n_init_all, n_init[i]), axis=0)
 I = [None] * N
 for i in range(N):
     I[i] = [None] * 4
@@ -177,56 +179,3 @@ for j in range(2,N_edge-2):
     pred_all[0+add[(N_edge-1)*N_edge+j]] = 7 + add[(N_edge-1)*N_edge+j-1]
     pred_all[8+add[(N_edge-1)*N_edge+j]] = 15 + add[(N_edge-1)*N_edge+j+1]
     pred_all[23+add[(N_edge-1)*N_edge+j]] = 29 + add[(N_edge-2)*N_edge+j]
-
-m = gb.Model()
-y = m.addVars(len(C_ALL), T, sample_size, lb=0, vtype=gb.GRB.CONTINUOUS)
-n = m.addVars(len(C_ALL), T+1, sample_size, lb=0, vtype=gb.GRB.CONTINUOUS)
-# w = m.addVars(N, 4, T, lb=0, ub=1,  vtype=gb.GRB.BINARY)      #binary variable
-w = m.addVars(N, 4, T, lb=0, ub=1,  vtype=gb.GRB.CONTINUOUS) 
-new_w = m.addVars(N, T, lb=0, ub=1, vtype=gb.GRB.CONTINUOUS)
-u = m.addVars(N, T-1, lb=0, ub=1,  vtype=gb.GRB.CONTINUOUS)
-m.setObjective(1/sample_size * (gb.quicksum(gb.quicksum(gb.quicksum(t * y[c,t,xi] for c in D_ALL) for t in range(T)) for xi in range(sample_size))
-        + alpha * gb.quicksum(gb.quicksum(gb.quicksum(t* y[c,t,xi] for c in list(set(C_ALL)-set(D_ALL))) for t in range(T)) for xi in range(sample_size))), gb.GRB.MINIMIZE)
-m.addConstrs(y[c,t,xi]-n[c,t,xi]<=0 for c in C_ALL for t in range(T) for xi in range(sample_size))
-m.addConstrs(y[c,t,xi]<=Q[0][0] for c in list(set(C_ALL)-set(I1_ALL)-set(I2_ALL)-set(I3_ALL)-set(I4_ALL)-set(D_ALL)) for t in range(T) for xi in range(sample_size))
-for i in range(N):
-    m.addConstrs(y[c+add[i],t,xi]<=Q[i][c+1]/beta[i][0,0,xi] for c in V[i] for t in range(T) for xi in range(sample_size))
-    m.addConstrs(y[c+add[i],t,xi]<=Q[i][c+2]/beta[i][1,0,xi] for c in V[i] for t in range(T) for xi in range(sample_size))
-    m.addConstrs(y[c+add[i],t,xi]<=Q[i][c+3]/beta[i][2,0,xi] for c in V[i] for t in range(T) for xi in range(sample_size))
-m.addConstrs(y[c,t,xi]-w[i,j,t]*Q_ALL[c]<=0 for i in range(N) for j in range(4) for c in I[i][j] for t in range(T) for xi in range(sample_size))
-m.addConstrs(y[c,t,xi]+W*n[proc_all[c],t,xi]<=W*Jam_N_ALL[c] for c in list(set(C_ALL)-set(D_ALL)-set(V_ALL)) for t in range(T) for xi in range(sample_size))
-
-for i in range(N):
-    m.addConstrs(beta[i][0,0,xi]*y[c+add[i],t,xi]+W*n[c+add[i]+1,t,xi]<=W*Jam_N_ALL[int(c+add[i]+1)] for c in V[i] for t in range(T) for xi in range(sample_size))
-    m.addConstrs(beta[i][1,0,xi]*y[c+add[i],t,xi]+W*n[c+add[i]+2,t,xi]<=W*Jam_N_ALL[int(c+add[i]+2)] for c in V[i] for t in range(T) for xi in range(sample_size))
-    if beta[i].shape[0]==3:
-        m.addConstrs(beta[i][2,0,xi]*y[c+add[i],t,xi]+W*n[c+add[i]+3,t,xi]<=W*Jam_N_ALL[int(c+add[i]+3)] for c in V[i] for t in range(T) for xi in range(sample_size))
-    m.addConstrs(n[c+add[i],t+1,xi] - n[c+add[i],t,xi] - beta[i][c-pred[i][c]-1,0,xi]*y[pred[i][c]+add[i],t,xi] + y[c+add[i],t,xi] == 0 for c in I1[i]+I2[i]+I3[i]+I4[i] for t in range(T) for xi in range(sample_size))
-
-m.addConstrs(n[c,t+1,xi] - n[c,t,xi] - y[pred_all[c],t,xi] + y[c,t,xi] == 0 for c in list(set(C_ALL)-set(O_ALL)-set(I1_ALL)-set(I2_ALL)-set(I3_ALL)-set(I4_ALL)-set(M_ALL)) for t in range(T) for xi in range(sample_size))
-m.addConstrs(n[c,t+1,xi] - n[c,t,xi] - gb.quicksum(y[d,t,xi] for d in pred_all[c]) + y[c,t,xi] == 0 for c in M_ALL for t in range(T) for xi in range(sample_size))
-# m.addConstrs(n[c,t+1] - n[c,t] + y[c,t] == Demand[0,0] for c in O_ALL for t in range(T))
-m.addConstrs(n[O_ALL[i],t+1,xi] - n[O_ALL[i],t,xi] + y[O_ALL[i],t,xi] == Demand_ALL[i] for i in range(len(O_ALL)) for t in range(T) for xi in range(sample_size))
-m.addConstrs(n[c,0,xi] == 0 for c in C_ALL for xi in range(sample_size))
-
-m.addConstrs(new_w[i,t] == w[i,0,t] + w[i,1,t] for i in range(N) for t in range(T))
-m.addConstrs(w[i,0,t]+w[i,1,t]+w[i,2,t]+w[i,3,t]==1 for i in range(N) for t in range(T))
-m.addConstrs(new_w[i,t]-new_w[i,t-1]-u[i,t-1]<=0 for i in range(N) for t in range(1,T))
-m.addConstrs( -new_w[i,t]+new_w[i,t-1]-u[i,t-1]<=0 for i in range(N) for t in range(1,T))
-m.addConstrs(-new_w[i,t]-new_w[i,t-1]+u[i,t-1]<=0 for i in range(N) for t in range(1,T))
-m.addConstrs(new_w[i,t]+new_w[i,t-1]+u[i,t-1]<=2 for  i in range(N) for t in range(1,T))
-m.addConstrs(u[i,t]+u[i,t+1]+u[i,t+2]+u[i,t+3]<=1 for  i in range(N) for t in range(0,T-4))
-m.addConstrs(new_w[i,t]+new_w[i,t+1]+new_w[i,t+2]+new_w[i,t+3]+new_w[i,t+4]+new_w[i,t+5]+new_w[i,t+6]+new_w[i,t+7] <= 8 for  i in range(N) for t in range(0,T-7))
-m.addConstrs(-(new_w[i,t]+new_w[i,t+1]+new_w[i,t+2]+new_w[i,t+3]+new_w[i,t+4]+new_w[i,t+5]+new_w[i,t+6]+new_w[i,t+7])<=-1 for  i in range(N) for t in range(0,T-7))
-# m.addConstrs(n[c,T]==0 for c in C_ALL)
-# m.addConstrs(n[c,0] == 1 for c in C_ALL)
-print(m.getConstrs())
-
-m.Params.TimeLimit=7200
-m.Params.LogFile = "log/LP_Gurobi_T50_S10.log"
-m.Params.LogToConsole = 0
-m.optimize()
-opt = m.objval
-
-
-
