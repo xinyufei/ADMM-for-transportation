@@ -2,9 +2,11 @@
 import numpy as np
 # specify the traffic network in plymouth road
 class Network:
-	def __init__(self, size = (4,4), random = False, sample_size = 20):
+	def __init__(self, size = (4,4), random = True, sample_size = 20):
+		Max_Jam_N = 16
+		Max_Q = 4
 		self.num_iterations = 1000
-		self.T = 100 # num of time steps
+		self.T = 20 # num of time steps
 		if type(size) == tuple:
 			m = size[0]
 			n = size[1]
@@ -30,8 +32,9 @@ class Network:
 		self.Jam_N = [None] * self.N # different for intersection cells and line cells
 		self.Q = [None] * self.N # different for intersection cells and line cells
 		self.beta = [None]*self.N # turning ratio
+		self.n_init = [None]*self.N # initialization of vehicles in cells
 		self.W = 1/3
-		self.alpha = -1.6
+		self.alpha = 1.6
 
 		# generate network
 		for i in range(m):
@@ -72,6 +75,20 @@ class Network:
 			self.pred[i*n].update(dict([j,19] for j in [20,21,22]))
 			self.pred[i*n].update(dict([j,26] for j in [27,28,29]))
 			self.pred[i*n].update({c: c-1 for c in list(set(self.C[i*n])-set(self.I1[i*n])-set(self.I2[i*n])-set(self.I3[i*n])-set(self.I4[i*n])-set(self.M[i*n]))})
+			if random == False:
+				self.n_init[i*n] = np.ones(len(self.C[i*n]))
+			if random == True:
+				self.n_init[i*n] = np.zeros((len(self.C[i*n]), sample_size))
+				for s in range(sample_size):
+					self.n_init[i*n][2,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+					self.n_init[i*n][3,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+					self.n_init[i*n][9,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+					self.n_init[i*n][10,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+					self.n_init[i*n][19,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+					self.n_init[i*n][26,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+				for c in self.I1[i*n] + self.I2[i*n] + self.I3[i*n] + self.I4[i*n]:
+					self.n_init[i*n][c,:] = Max_Jam_N/2
+
 
 			for j in range(1,n-1,2):
 				self.C[i*n+j] = list(range(30))
@@ -111,6 +128,19 @@ class Network:
 				self.pred[i*n+j].update(dict([j,17] for j in [18,19,20]))
 				self.pred[i*n+j].update(dict([j,24] for j in [25,26,27]))
 				self.pred[i*n+j].update({c: c-1 for c in list(set(self.C[i*n+j])-set(self.I1[i*n+j])-set(self.I2[i*n+j])-set(self.I3[i*n+j])-set(self.I4[i*n+j])-set(self.M[i*n+j]))})
+				if random == False:
+					self.n_init[i*n+j] = np.ones(len(self.C[i*n+j]))
+				if random == True:
+					self.n_init[i*n+j] = np.zeros((len(self.C[i*n+j]), sample_size))
+					for s in range(sample_size):
+						self.n_init[i*n+j][0,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+						self.n_init[i*n+j][1,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+						self.n_init[i*n+j][9,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+						self.n_init[i*n+j][10,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+						self.n_init[i*n+j][17,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+						self.n_init[i*n+j][24,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+					for c in self.I1[i*n+j] + self.I2[i*n+j] + self.I3[i*n+j] + self.I4[i*n+j]:
+						self.n_init[i*n+j][c,:] = Max_Jam_N/2
 
 				self.C[i*n+j+j] = list(range(30))
 				self.O[i*n+j+1] = []
@@ -149,6 +179,19 @@ class Network:
 				self.pred[i*n+j+1].update(dict([j,17] for j in [18,19,20]))
 				self.pred[i*n+j+1].update(dict([j,24] for j in [25,26,27]))
 				self.pred[i*n+j+1].update({c: c-1 for c in list(set(self.C[i*n+j+1])-set(self.I1[i*n+j+1])-set(self.I2[i*n+j+1])-set(self.I3[i*n+j+1])-set(self.I4[i*n+j+1])-set(self.M[i*n+j+1]))})
+				if random == False:
+					self.n_init[i*n+j+1] = np.ones(len(self.C[i*n+j+1]))
+				if random == True:
+					self.n_init[i*n+j+1] = np.zeros((len(self.C[i*n+j+1]), sample_size))
+					for s in range(sample_size):
+						self.n_init[i*n+j+1][1,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+						self.n_init[i*n+j+1][2,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+						self.n_init[i*n+j+1][8,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+						self.n_init[i*n+j+1][9,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+						self.n_init[i*n+j+1][17,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+						self.n_init[i*n+j+1][24,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+					for c in self.I1[i*n+j+1] + self.I2[i*n+j+1] + self.I3[i*n+j+1] + self.I4[i*n+j+1]:
+						self.n_init[i*n+j+1][c,:] = Max_Jam_N/2
 
 			self.C[(i+1)*n-1] = list(range(32))
 			self.O[(i+1)*n-1] = [9]
@@ -187,7 +230,19 @@ class Network:
 			self.pred[(i+1)*n-1].update(dict([j,19] for j in [20,21,22]))
 			self.pred[(i+1)*n-1].update(dict([j,26] for j in [27,28,29]))
 			self.pred[(i+1)*n-1].update({c: c-1 for c in list(set(self.C[(i+1)*n-1])-set(self.I1[(i+1)*n-1])-set(self.I2[(i+1)*n-1])-set(self.I3[(i+1)*n-1])-set(self.I4[(i+1)*n-1])-set(self.M[(i+1)*n-1]))})
-
+			if random == False:
+				self.n_init[(i+1)*n-1] = np.ones(len(self.C[(i+1)*n-1]))
+			if random == True:
+				self.n_init[(i+1)*n-1] = np.zeros((len(self.C[(i+1)*n-1]),sample_size))
+				for s in range(sample_size):
+					self.n_init[(i+1)*n-1][0,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+					self.n_init[(i+1)*n-1][1,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+					self.n_init[(i+1)*n-1][11,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+					self.n_init[(i+1)*n-1][12,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+					self.n_init[(i+1)*n-1][19,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+					self.n_init[(i+1)*n-1][26,s] = np.random.uniform(0,Max_Jam_N,1)[0]
+				for c in self.I1[(i+1)*n-1] + self.I2[(i+1)*n-1] + self.I3[(i+1)*n-1] + self.I4[(i+1)*n-1]:
+					self.n_init[(i+1)*n-1][c,:] = Max_Jam_N/2
 			
 		for i in range(n):	
 			self.O[i].append(self.BI[i][-1])
@@ -202,23 +257,25 @@ class Network:
 			self.Demand[(m-1)*n+i].append(0.1)
 
 		for i in range(self.N):
-			self.Jam_N[i] = np.ones(len(self.C[i]))*16
-			self.Q[i] = np.ones(len(self.C[i]))*4
+			self.Jam_N[i] = np.ones(len(self.C[i]))*Max_Jam_N
+			self.Q[i] = np.ones(len(self.C[i]))*Max_Q
 			for c in self.I1[i] + self.I2[i] + self.I3[i] + self.I4[i]:
-				self.Jam_N[i][c] = 8
-				self.Q[i][c] = 2
+				self.Jam_N[i][c] = Max_Jam_N/2
+				self.Q[i][c] = Max_Q/2
 
 		# set turning ratio
-		if random == True:
+		""" f random == True:
 			ratio = np.zeros((3,4,sample_size))
 			for i in range(sample_size):
 				ratio[0,:,i] = np.repeat(np.random.uniform(0,0.2,1),4)
 				ratio[1,:,i] = np.repeat(np.random.uniform(0.6,0.8,1),4)
 				ratio[2,:,i] = 1 - ratio[0,:,i] - ratio[1,:,i]
 			for i in range(self.N):
-				self.beta[i] = ratio
+				self.beta[i] = ratio """
 		
-		if random == False:
-			for i in range(self.N):
-				self.beta[i] = np.zeros((3,4))
-				self.beta[i] = np.array([[0.15,0.15,0.15,0.15],[0.7,0.7,0.7,0.7],[0.15,0.15,0.15,0.15]])
+		# if random == False:
+		for i in range(self.N):
+			self.beta[i] = np.zeros((3,4))
+			self.beta[i] = np.array([[0.15,0.15,0.15,0.15],[0.7,0.7,0.7,0.7],[0.15,0.15,0.15,0.15]])
+
+

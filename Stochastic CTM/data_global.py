@@ -4,7 +4,8 @@ from data import Network
 
 sample_size = 1
 N_edge = 4
-network_data = Network(N_edge, True, sample_size)
+# network_data = Network(N_edge, True, sample_size)
+network_data = Network(N_edge, True)
 N = network_data.N
 T = network_data.T
 C = network_data.C
@@ -61,7 +62,7 @@ for i in range(1,N):
     I2_ALL = I2_ALL + [int(d+add[i]) for d in I2[i]]
     I3_ALL = I3_ALL + [int(d+add[i]) for d in I3[i]]
     I4_ALL = I4_ALL + [int(d+add[i]) for d in I4[i]]
-    Demand_ALL = Demand_ALL + [int(de) for de in Demand[i]]
+    Demand_ALL = Demand_ALL + [de for de in Demand[i]]
     Q_ALL = np.hstack((Q_ALL, Q[i]))
     Jam_N_ALL = np.hstack((Jam_N_ALL, Jam_N[i]))
     n_init_all = np.concatenate((n_init_all, n_init[i]), axis=0)
