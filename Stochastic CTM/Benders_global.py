@@ -32,6 +32,7 @@ def Benders(epsilon = 0.01, num_scenario = 10):
     m_master.Params.LogToConsole = 0
     m_master.Params.TimeLimit = 7200
     m_master.Params.LogFile = 'benders/T' + str(T) + '_S' + str(num_scenario) + '_master.log'
+    m_master.Params.MIPGap = 1e-3
     # initialized integer variables (fist-stage variables)
     w_tilde = np.zeros((N,4,T))
     theta_tilde = np.ones(num_scenario)*(-np.infty)
@@ -47,7 +48,8 @@ def Benders(epsilon = 0.01, num_scenario = 10):
     num_cons9 = len(O_ALL)*T
     num_cons10 = len(C_ALL)
     num_ite = 0
-    while ub-lb > epsilon:
+    start_global = time.time()
+    while lb == -np.infty or abs(ub-lb)/abs(lb) > epsilon:
         num_ite = num_ite + 1
         num_optimal_sub = 0
         opt_sub = np.zeros(num_scenario)
@@ -57,8 +59,8 @@ def Benders(epsilon = 0.01, num_scenario = 10):
             m_sub = gb.Model()
             y = m_sub.addVars(len(C_ALL), T, lb=0, vtype=gb.GRB.CONTINUOUS)
             n = m_sub.addVars(len(C_ALL), T+1, lb=0, vtype=gb.GRB.CONTINUOUS)
-            m_sub.setObjective(gb.quicksum(gb.quicksum(t * y[c,t] for c in D_ALL) for t in range(T))
-                    + alpha * gb.quicksum(gb.quicksum(t* y[c,t] for c in list(set(C_ALL)-set(D_ALL))) for t in range(T)), gb.GRB.MINIMIZE)
+            m_sub.setObjective(-gb.quicksum(gb.quicksum((T - t) * y[c,t] for c in C_ALL) for t in range(T)) -
+                    alpha*gb.quicksum(gb.quicksum(n[c,t] for c in D_ALL) for t in range(T)), gb.GRB.MINIMIZE)
             cons1 = m_sub.addConstrs(y[c,t]-w_tilde[i,j,t]*Q_ALL[c]<=0 for i in range(N) for j in range(4) for c in I[i][j] for t in range(T))
             cons2 = m_sub.addConstrs(y[c,t]-n[c,t]<=0 for c in C_ALL for t in range(T))
             cons3 = m_sub.addConstrs(y[c,t]<=Q[0][0] for c in list(set(C_ALL)-set(I1_ALL)-set(I2_ALL)-set(I3_ALL)-set(I4_ALL)-set(D_ALL)) for t in range(T))
@@ -86,7 +88,7 @@ def Benders(epsilon = 0.01, num_scenario = 10):
             m_sub.printStats()
             m_sub.optimize()
             if m_sub.status == 3:
-                rho = m_sub.FarkasDual()
+                rho = m_sub.FarkasDual
                 constant = 0
                 scope = 0
                 cons = 0
@@ -102,7 +104,7 @@ def Benders(epsilon = 0.01, num_scenario = 10):
                     constant = constant + rho[num_cons2+cons]*Q[0][0]
                 cons = 0
                 for i in range(N):
-                    for c in range(V[i]):
+                    for c in V[i]:
                         for t in range(T):
                             constant = constant + rho[num_cons3+cons]*Q[i][c+1]/beta[i][0,0] + rho[num_cons3+cons]*Q[i][c+2]/beta[i][1,0] + rho[num_cons3+cons]*Q[i][c+3]/beta[i][2,0]
                             cons = cons + 3
@@ -156,16 +158,23 @@ def Benders(epsilon = 0.01, num_scenario = 10):
         if num_optimal_sub == num_scenario:
             if ub > sum(opt_sub)/num_scenario:
                 ub = sum(opt_sub)/num_scenario
+        end_global = time.time()
         print("iteration " + str(num_ite))
         print("upper bound is %f" % ub)
         print("lower bound is %f" % lb)
+        print("gap is %f" % ((ub-lb)/abs(lb)))
         print("time to solve master problem is %f" % (end_master - start_master))
         print("time to solve sub problem is %f" % (end_sub - start_sub))
+        print("all time to solve problem is %f" % (end_global - start_global))
         f = open('benders/T' + str(T) + '_S' + str(num_scenario) + '_bound.log', 'a+')
         print("iteration " + str(num_ite), file = f)
         print("upper bound is %f" % ub, file = f)
         print("lower bound is %f" % lb, file = f)
+        print("gap is %f" % ((ub-lb)/abs(lb)), file = f)
         print("time to solve master problem is %f" % (end_master - start_master), file = f)
         print("time to solve sub problem is %f" % (end_sub - start_sub), file = f)
+        print("all time to solve problem is %f" % (end_global - start_global), file = f)
+        if end_global - start_global >= 7200:
+            break
 if __name__ == '__main__':
     Benders()
