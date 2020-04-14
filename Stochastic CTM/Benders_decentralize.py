@@ -1,7 +1,17 @@
+from data_global import *
+import numpy as np
+import gurobipy as gb
+import time
 def Benders_decentralize(epsilon = 0.001, num_scenario = 100)
     ub = np.infty
     lb = -np.infty
     f = open('benders/T' + str(T) + '_S' + str(num_scenario) + '_bound_UB.log', 'w+')
+    # generalize all samples
+    network_data = Network(N_edge, True, num_scenario)
+    n_init = network_data.n_init
+    n_init_all = n_init[0]
+    for i in range(1,N):
+        n_init_all = np.concatenate((n_init_all, n_init[i]), axis=0)
     # build master model
     m_master = [None]*N
     w = [None]*N
