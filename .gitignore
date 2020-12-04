@@ -4,3 +4,7 @@
 __pycache__/
 
 log/
+
+debug.txt
+
+.vscode/launch.json

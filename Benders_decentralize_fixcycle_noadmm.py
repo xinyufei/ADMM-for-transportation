@@ -338,7 +338,7 @@ def Benders(epsilon = 0.01, num_scenario = 100, T = 20):
                 o_optimal = o_tilde
                 z1_optimal = z1_tilde
                 z2_optimal = z2_tilde """
-            ub_array.append(ub)
+            # ub_array.append(ub)
             start_plot = time.time()
             y_value_average = np.zeros((len(C_ALL), T))
             n_value_average = np.zeros((len(C_ALL), T))
@@ -347,8 +347,7 @@ def Benders(epsilon = 0.01, num_scenario = 100, T = 20):
                     y_value_average[c,t] = sum(y_value[xi][c,t] for xi in range(num_scenario))/num_scenario
                     n_value_average[c,t] = sum(n_value[xi][c,t] for xi in range(num_scenario))/num_scenario
             plot_vehicle(num_ite, T, num_scenario, "fixed_length_decentralize", add, len(C_ALL), n_value_average, y_value_average)
-            end_plot = time.time()
-                    
+            end_plot = time.time()   
             end_global = time.time()
             time_sub.append(end_sub-start_sub)
             time_master.append(end_master-start_master)
@@ -357,25 +356,25 @@ def Benders(epsilon = 0.01, num_scenario = 100, T = 20):
             obj_array.append(sum(lb_sub)/num_scenario)
             ub_array.append(ub)
             print("iteration " + str(num_ite))
-            print("upper bound is %f" % ub)
-            print("lower bound is %f" % lb)
-            print("gap is %f" % ((ub-lb)/abs(lb)))
-            print("time to solve master problem is %f" % (end_master - start_master))
-            print("time to solve sub problem is %f" % (end_sub - start_sub))
-            print("time for this iteration is  %f" % (end_global-start_ite))
-            print("all time to solve problem is %f" % (end_global - start_global))
+            print("upper bound is ", ub)
+            print("lower bound is ", lb)
+            print("gap is ", ((ub-lb)/abs(lb)))
+            print("time to solve master problem is ", (end_master - start_master))
+            print("time to solve sub problem is ", (end_sub - start_sub))
+            print("time for this iteration is  ", (end_global-start_ite))
+            print("all time to solve problem is ", (end_global - start_global))
             f = open('H_4/T' + str(T) + '_S' + str(num_scenario) + '_bound_LP_fixed_length_decentralize.log', 'a+')
             print("iteration " + str(num_ite), file = f)
-            print("upper bound is %f" % ub, file = f)
-            print("lower bound is %f" % lb, file = f)
-            print("gap is %f" % ((ub-lb)/abs(lb)), file = f)
-            print("throughput term is %f" % (sum(delay_sub)/num_scenario), file = f)
-            print("ctm term is %f" % (sum(ctm_sub)/num_scenario), file = f)
-            print("time to solve master problem is %f" % (end_master - start_master), file = f)
-            print("time to solve sub problem is %f" % (end_sub - start_sub), file = f)
-            print("time to plot the graph is %f" % (end_plot - start_plot), file = f)
-            print("time for this iteration is  %f" % (end_global-start_ite), file = f)
-            print("all time to solve problem is %f" % (end_global - start_global), file = f)
+            print("upper bound is " , ub, file = f)
+            print("lower bound is " , lb, file = f)
+            print("gap is ", ((ub-lb)/abs(lb)), file = f)
+            print("throughput term is ", (sum(delay_sub)/num_scenario), file = f)
+            print("ctm term is ", (sum(ctm_sub)/num_scenario), file = f)
+            print("time to solve master problem is ", (end_master - start_master), file = f)
+            print("time to solve sub problem is ", (end_sub - start_sub), file = f)
+            print("time to plot the graph is ", (end_plot - start_plot), file = f)
+            print("time for this iteration is ", (end_global-start_ite), file = f)
+            print("all time to solve problem is ", (end_global - start_global), file = f)
             f = open('H_4/T' + str(T) + '_S' + str(num_scenario) + '_signal_fixed_length_decentralize.log', 'a+')
             print("iteration " + str(num_ite), file = f)
             for i in range(N):
@@ -438,11 +437,11 @@ def Benders(epsilon = 0.01, num_scenario = 100, T = 20):
         eval_delay[xi] = -sum(sum(n_value[c,t] for c in D_ALL) for t in range(T))
         eval_ctm[xi] = m_eval.objval
     throughput.append(sum(eval_delay)/num_scenario)
-    print("the throughput is %f" % (sum(eval_delay)/num_scenario))
-    print("the ctm objective value is %f" % (sum(eval_ctm)/num_scenario))
+    print("the throughput is ", (sum(eval_delay)/num_scenario))
+    print("the ctm objective value is ", (sum(eval_ctm)/num_scenario))
     f = open('H_4/T' + str(T) + '_S' + str(num_scenario) + '_bound_LP_fixed_length_decentralize.log', 'a+')
-    print("the throughput is %f" % (sum(eval_delay)/num_scenario), file = f)
-    print("the ctm objective value is %f" % (sum(eval_ctm)/num_scenario), file = f)
+    print("the throughput is ", (sum(eval_delay)/num_scenario), file = f)
+    print("the ctm objective value is ", (sum(eval_ctm)/num_scenario), file = f)
     # draw the figure of time
     plt.figure()
     # plt.plot(time_sub, label = 'time of sub problem')
@@ -471,8 +470,8 @@ def Benders(epsilon = 0.01, num_scenario = 100, T = 20):
     return obj_array, ub_array, lb_array
     
 if __name__ == '__main__':
-    T = 600
-    num_scenario = 10
+    T = 50
+    num_scenario = 1
     obj_array, ub_array, lb_array = Benders(0.0001, num_scenario, T)
     f1 = open('H_4/T' + str(T) + '_S' + str(num_scenario) + '_obj_fixed_length_decentralize.txt', 'w+')
     f2 = open('H_4/T' + str(T) + '_S' + str(num_scenario) + '_ub_fixed_length_decentralize.txt', 'w+')
