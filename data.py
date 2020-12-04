@@ -1,391 +1,349 @@
+# generate network model given size n
 import numpy as np
 # specify the traffic network in plymouth road
-num_iterations = 100
-T = 8
-N = 6 # number of intersetions
-
-C = [None] * N # cells in each intersection   all the cells
-O = [None] * N # origins in each inter
-D = [None] * N # destinations
-BI = [None] * N # same as the ADMM paper boundary cells of inflow
-BO = [None] * N
-I1 = [None] * N #intersection cells
-I2 = [None] * N
-I3 = [None] * N
-I4 = [None] * N
-V = [None] * N #diverging cells  
-M = [None] * N #merging cells
-beta = [None] * N #ratio to turn left/right
-proc = [None] * N #proceding cell relationships
-pred = [None] * N #preceding cell relationships
-Jam_N = [None] * N
-Q = [None] * N
-Demand = [None] * N
-
-
-C[0] = list(range(80))
-O[0] = [0, 68]
-D[0] = [57, 67]
-BI[0] = [29]
-BO[0] = [28]
-I1[0] = [10]
-I2[0] = [11,46,47]
-I3[0] = [78]
-I4[0] = [79]
-V[0] = [9, 45, 77]
-M[0] = [12, 48, 58]
-# beta[0] = np.array([[0.181, 0, 0.73], [0.819, 0.604, 0], [0, 0.396, 0.27]])
-beta[0] = np.array([[0.181, 0.604, 0.73], [0.819, 0.396, 0.27]])
-proc[0] = {}
-proc[0][10] = 58
-proc[0][11] = 12
-proc[0][46] = 48
-proc[0][47] = 58
-proc[0][78] = 12
-proc[0][79] = 48
-proc[0].update({c: c+1 for c in list(set(C[0])-set(I1[0])-set(I2[0])-set(I3[0])-set(I4[0]))})
-pred[0] = {}
-pred[0][10] = 9
-pred[0][11] = 9
-pred[0][46] = 45
-pred[0][47] = 45
-pred[0][78] = 77
-pred[0][79] = 77
-pred[0][12] = [11, 78]
-pred[0][48] = [46, 79]
-pred[0][58] = [10, 47]
-pred[0].update({c: c-1 for c in list(set(C[0])-set(I1[0])-set(I2[0])-set(I3[0])-set(I4[0])-set(M[0]))})
-
-Jam_N[0] = np.zeros(len(C[0]))
-for c in O[0]+D[0]: 
-    Jam_N[0][c] = 99999
-for c in C[0][1:9] + C[0][12:45] + C[0][48:57]:
-    Jam_N[0][c] = 8
-for c in C[0][58:67] + C[0][69:77]:
-    Jam_N[0][c] = 4
-
-for c in I1[0] + I2[0] + I3[0] + I4[0]:
-    Jam_N[0][c] = 4
-Jam_N[0][11] = 8
-Jam_N[0][46] = 8
-Jam_N[0][9] = 12
-Jam_N[0][45] = 12
-Jam_N[0][77] = 8
-
-Q[0] = Jam_N[0]/4
-Q[0][0] = 2
-Q[0][68] = 1
-for c in D[0]:
-    Q[0][c] = 99999
-Demand[0] = np.zeros(len(O[0]))
-Demand[0][0] = 857
-Demand[0][1] = 200
-
-C[1] = list(range(112))
-O[1] = [66, 89]
-D[1] = [88, 111]
-BI[1] = [0, 33]
-BO[1] = [32, 65]
-I1[1] = [16, 47]
-I2[1] = [17,18,48,49]
-I3[1] = [76, 99]
-I4[1] = [77,78,100,101]
-V[1] = [15,46,75,98]
-M[1] = [19,50,79,102]
-beta[1] = np.array([[0.006,0.048,0.595,0.603],[0.954,0.928,0.055,0.111],[0.04,0.024,0.35,0.286]])
-proc[1] = {}
-proc[1][16] = 79
-proc[1][17] = 19
-proc[1][18] = 102
-proc[1][49] = 79
-proc[1][48] = 50
-proc[1][47] = 102
-proc[1][76] = 50
-proc[1][77] = 79
-proc[1][78] = 19
-proc[1][99] = 19
-proc[1][100] = 102
-proc[1][101] = 50
-proc[1].update({c: c+1 for c in list(set(C[1])-set(I1[1])-set(I2[1])-set(I3[1])-set(I4[1]))})
-
-pred[1] = {}
-pred[1].update(dict([i, 15] for i in [16,17,18]))
-pred[1].update(dict([i, 46] for i in [47,48,49]))
-pred[1].update(dict([i, 75] for i in [76,77,78]))
-pred[1].update(dict([i, 98] for i in [99,100,101]))
-pred[1][19] = [17, 78, 99]
-pred[1][50] = [48, 101, 76]
-pred[1][79] = [49, 77, 16]
-pred[1][102] = [100, 18, 47]
-pred[1].update({c: c-1 for c in list(set(C[1])-set(I1[1])-set(I2[1])-set(I3[1])-set(I4[1])-set(M[1]))})
-
-Jam_N[1] = np.zeros(len(C[1]))
-for c in O[1]+D[1]: 
-    Jam_N[1][c] = 99999
-for c in C[1][0:15] + C[1][19:46] + C[1][50:66]:
-    Jam_N[1][c] = 8
-for c in C[1][67:75] + C[1][79:88] + C[1][90:98] + C[1][102:111]:
-    Jam_N[1][c] = 4
-
-for c in I1[1] + I2[1] + I3[1] + I4[1]:
-    Jam_N[1][c] = 4
-Jam_N[1][17] = 8
-Jam_N[1][48] = 8
-Jam_N[1][15] = 12
-Jam_N[1][46] = 12
-Jam_N[1][75] = 8
-Jam_N[1][98] = 8
-
-Q[1] = Jam_N[1]/4
-Q[1][66] = 1
-Q[1][89] = 1
-for c in D[1]:
-    Q[1][c] = 99999
-Demand[1] = np.zeros(len(O[1]))
-Demand[1][0] = 326
-Demand[1][1] = 63
+class Network:
+	def __init__(self, size = (4,4), random = True, sample_size = 20, T = 20, seed = None):
+		# Max_Jam_N = 16
+		# Max_Q = 4
+		Max_Jam_N = 12
+		Max_Q = 3
+		self.num_iterations = 1000
+		self.T = T # num of time steps
+		if type(size) == tuple:
+			m = size[0]
+			n = size[1]
+			self.N = m*n
+		else:
+			m = size
+			n = size
+			self.N = n*n
+		self.C = [None] * self.N # self.Cells in each intersection   all the cells
+		self.O = [None] * self.N # origins in each inter
+		self.D = [None] * self.N # destinations
+		self.BI = [None] * self.N # same as the ADMM paper boundary cells of inflow
+		self.BO = [None] * self.N
+		self.BI_IN = [None] * self.N
+		self.BO_IN = [None] * self.N
+		self.I1 = [None] * self.N #intersection cells
+		self.I2 = [None] * self.N
+		self.I3 = [None] * self.N
+		self.I4 = [None] * self.N
+		self.V = [None] * self.N #diverging cells  
+		self.M = [None] * self.N #merging cells
+		self.proc = [None] * self.N #proceding cell relationships
+		self.pred = [None] * self.N #preceding cell relationships
+		self.Demand = [None] * self.N
+		self.Jam_N = [None] * self.N # different for intersection cells and line cells
+		self.Q = [None] * self.N # different for intersection cells and line cells
+		self.beta = [None]*self.N # turning ratio
+		self.n_init = [None]*self.N # initialization of vehicles in cells
+		self.W = 1/3
+		self.alpha = 0.001
+		self.U = 2*self.T
+		self.epsilon = 0.001
+		self.num_cycle = int(np.ceil(self.T/20))
+		self.seed = seed
+		# generate network
+		for i in range(m):
+			self.C[i*n] = list(range(32))
+			self.O[i*n] = [0]
+			self.Demand[i*n]=[]
+			self.D[i*n] = [17]
+			self.BI[i*n] = [9,18,25]
+			self.BO[i*n] = [8,24,31]
+			self.BI_IN[i*n] = [i*n+1,(i+1)*n,(i-1)*n]
+			self.BO_IN[i*n] = [i*n+1,(i-1)*n,(i+1)*n]
+			self.I1[i*n] = [4,11]
+			self.I2[i*n] = [5,6,12,13]
+			self.I3[i*n] = [20,27]
+			self.I4[i*n] = [21,22,28,29]
+			self.V[i*n] = [3,10,19,26]
+			self.M[i*n] = [7,14,23,30]
+			# self.beta[i*n] = np.array([[0.15,0.15,0.15,0.15],[0.7,0.7,0.7,0.7],[0.15,0.15,0.15,0.15]])
+			self.proc[i*n] = {}
+			self.proc[i*n][4] = 23
+			self.proc[i*n][5] = 7
+			self.proc[i*n][6] = 30
+			self.proc[i*n][11] = 30
+			self.proc[i*n][12] = 14
+			self.proc[i*n][13] = 23
+			self.proc[i*n][20] = 14
+			self.proc[i*n][21] = 23
+			self.proc[i*n][22] = 7
+			self.proc[i*n][27] = 7
+			self.proc[i*n][28] = 30
+			self.proc[i*n][29] = 14
+			self.proc[i*n].update({c: c+1 for c in list(set(self.C[i*n])-set(self.I1[i*n])-set(self.I2[i*n])-set(self.I3[i*n])-set(self.I4[i*n]))})
+			self.pred[i*n] = {}
+			self.pred[i*n][7] = [5,22,27]
+			self.pred[i*n][14] = [12,20,29]
+			self.pred[i*n][23] = [4,13,21]
+			self.pred[i*n][30] = [6,11,28]
+			self.pred[i*n].update(dict([j,3] for j in [4,5,6]))
+			self.pred[i*n].update(dict([j,10] for j in [11,12,13]))
+			self.pred[i*n].update(dict([j,19] for j in [20,21,22]))
+			self.pred[i*n].update(dict([j,26] for j in [27,28,29]))
+			self.pred[i*n].update({c: c-1 for c in list(set(self.C[i*n])-set(self.I1[i*n])-set(self.I2[i*n])-set(self.I3[i*n])-set(self.I4[i*n])-set(self.M[i*n]))})
+			self.n_init[i*n] = np.zeros(len(self.C[i*n]))
+			if random == False:
+				self.Demand[i*n].append([0.3*Max_Q]*self.T)
+			# from west to east
+			if random == True:
+				self.Demand[i*n].append([None]*sample_size)
+				for xi in range(sample_size):
+					if self.seed != None:
+						np.random.seed(self.seed)
+					mean = np.random.random()*0.3*Max_Q+0.2*Max_Q
+					# mean = np.random.random()*0.3*Max_Q+0.1*Max_Q
+					self.Demand[i*n][-1][xi] = np.random.poisson(mean, self.T)
 
 
-C[2] = list(range(64))
-O[2] = [52]
-D[2] = [51]
-BI[2] = [0, 21]
-BO[2] = [20,41]
-I1[2] = [13]
-I2[2] = [14,27,28]
-I3[2] = [62]
-I4[2] = [63]
-V[2] = [12,26,61]
-M[2] = [15,29,42]
-# beta[2] = np.array([[0.059,0,0.378],[0.941,0.969,0],[0,0.031,0.622]])
-beta[2] = np.array([[0.059, 0.969, 0.378], [0.941, 0.031, 0.622]])
-proc[2]={}
-proc[2][13] = 42
-proc[2][14] = 15
-proc[2][27] = 29
-proc[2][28] = 42
-proc[2][62] = 15
-proc[2][63] = 29
-proc[2].update({c: c+1 for c in list(set(C[2])-set(I1[2])-set(I2[2])-set(I3[2])-set(I4[2]))})
-pred[2] = {}
-pred[2][15] = [14,62]
-pred[2][29] = [27,63]
-pred[2][42] = [13, 28]
-pred[2].update(dict([i, 12] for i in [13,14]))
-pred[2].update(dict([i, 26] for i in [27,28]))
-pred[2].update(dict([i, 61] for i in [62,63]))
-pred[2].update({c: c-1 for c in list(set(C[2])-set(I1[2])-set(I2[2])-set(I3[2])-set(I4[2])-set(M[2]))})
+			for j in range(1,n-1,2):
+				self.C[i*n+j] = list(range(30))
+				self.O[i*n+j] = []
+				self.Demand[i*n+j] = []
+				self.D[i*n+j] = []
+				self.BI[i*n+j] = [0,8,16,23]
+				self.BO[i*n+j] = [7,15,22,29]
+				self.BI_IN[i*n+j] = [i*n+j-1, i*n+j+1, (i+1)*n+j, (i-1)*n+j]
+				self.BO_IN[i*n+j] = [i*n+j+1, i*n+j-1, (i-1)*n+j, (i+1)*n+j]
+				self.I1[i*n+j] = [2,11]
+				self.I2[i*n+j] = [3,4,12,13]
+				self.I3[i*n+j] = [18,25]
+				self.I4[i*n+j] = [19,20,26,27]
+				self.V[i*n+j] = [1,10,17,24]
+				self.M[i*n+j] = [5,14,21,28]
+				# self.beta[i*n+j] = np.array([[0.15,0.15,0.15,0.15],[0.7,0.7,0.7,0.7],[0.15,0.15,0.15,0.15]])
+				self.proc[i*n+j] = {}
+				self.proc[i*n+j][2] = 21
+				self.proc[i*n+j][3] = 5
+				self.proc[i*n+j][4] = 28
+				self.proc[i*n+j][11] = 28
+				self.proc[i*n+j][12] = 14
+				self.proc[i*n+j][13] = 21
+				self.proc[i*n+j][18] = 14
+				self.proc[i*n+j][19] = 21
+				self.proc[i*n+j][20] = 5
+				self.proc[i*n+j][25] = 5
+				self.proc[i*n+j][26] = 28
+				self.proc[i*n+j][27] = 14
+				self.proc[i*n+j].update({c: c+1 for c in list(set(self.C[i*n+j])-set(self.I1[i*n+j])-set(self.I2[i*n+j])-set(self.I3[i*n+j])-set(self.I4[i*n+j]))})
+				self.pred[i*n+j] = {}
+				self.pred[i*n+j][5] = [3,20,25]
+				self.pred[i*n+j][14] = [12,18,27]
+				self.pred[i*n+j][21] = [2,13,19]
+				self.pred[i*n+j][28] = [4,11,26]
+				self.pred[i*n+j].update(dict([j,1] for j in [2,3,4]))
+				self.pred[i*n+j].update(dict([j,10] for j in [11,12,13]))
+				self.pred[i*n+j].update(dict([j,17] for j in [18,19,20]))
+				self.pred[i*n+j].update(dict([j,24] for j in [25,26,27]))
+				self.pred[i*n+j].update({c: c-1 for c in list(set(self.C[i*n+j])-set(self.I1[i*n+j])-set(self.I2[i*n+j])-set(self.I3[i*n+j])-set(self.I4[i*n+j])-set(self.M[i*n+j]))})
+				self.n_init[i*n+j] = np.zeros(len(self.C[i*n]))
+				""" if random == False:
+					# self.Demand[i*n] = [0.3*Max_Q*4]*self.T
+					self.beta[i*n+j] = np.array([[0.15,0.15,0.15,0.15],[0.7,0.7,0.7,0.7],[0.15,0.15,0.15,0.15]])
+				if random == True:
+					# self.Demand[i*n] = np.random.poisson(0.3*Max_Q*4, sample_size)
+					for xi in sample_size:
+						pick_prob = np.random.rand()
+						if pick_prob < 1/3:
+							self.beta[i*n+j][xi] = np.array([[0.1,0.1,0.1,0.1],[0.8,0.8,0.8,0.8],[0.1,0.1,0.1,0.1]])
+						if pick_prob >= 1/3 and pick_prob < 2/3:
+							self.beta[i*n+j][xi] = np.array([[0.1,0.1,0.1,0.1],[0.7,0.7,0.7,0.7],[0.2,0.2,0.2,0.2]])
+						if pick_prob >= 2/3:
+							self.beta[i*n+j][xi] = np.array([[0.2,0.2,0.2,0.2],[0.75,0.75,0.75,0.75],[0.05,0.05,0.05,0.05]]) """
 
-Jam_N[2] = np.zeros(len(C[2]))
-for c in O[2]+D[2]: 
-    Jam_N[2][c] = 99999
-for c in C[2][0:12] + C[2][15:26] + C[2][29:42]:
-    Jam_N[2][c] = 8
-for c in C[2][42:51] + C[2][53:61]:
-    Jam_N[2][c] = 4
+				self.C[i*n+j+1] = list(range(30))
+				self.O[i*n+j+1] = []
+				self.Demand[i*n+j+1] = []
+				self.D[i*n+j+1] = []
+				self.BI[i*n+j+1] = [0,8,16,23]
+				self.BO[i*n+j+1] = [7,15,22,29]
+				self.BI_IN[i*n+j+1] = [i*n+j, i*n+j+2, (i+1)*n+j+1, (i-1)*n+j+1]
+				self.BO_IN[i*n+j+1] = [i*n+j+2, i*n+j, (i-1)*n+j+1, (i+1)*n+j+1]
+				self.I1[i*n+j+1] = [3,10]
+				self.I2[i*n+j+1] = [4,5,11,12]
+				self.I3[i*n+j+1] = [18,25]
+				self.I4[i*n+j+1] = [19,20,26,27]
+				self.V[i*n+j+1] = [2,9,17,24]
+				self.M[i*n+j+1] = [6,13,21,28]
+				# self.beta[i*n+j+1] = np.array([[0.15,0.15,0.15,0.15],[0.7,0.7,0.7,0.7],[0.15,0.15,0.15,0.15]])
+				self.proc[i*n+j+1] = {}
+				self.proc[i*n+j+1][3] = 21
+				self.proc[i*n+j+1][4] = 6
+				self.proc[i*n+j+1][5] = 28
+				self.proc[i*n+j+1][10] = 28
+				self.proc[i*n+j+1][11] = 13
+				self.proc[i*n+j+1][12] = 21
+				self.proc[i*n+j+1][18] = 13
+				self.proc[i*n+j+1][19] = 21
+				self.proc[i*n+j+1][20] = 6
+				self.proc[i*n+j+1][25] = 6
+				self.proc[i*n+j+1][26] = 28
+				self.proc[i*n+j+1][27] = 13
+				self.proc[i*n+j+1].update({c: c+1 for c in list(set(self.C[i*n+j+1])-set(self.I1[i*n+j+1])-set(self.I2[i*n+j+1])-set(self.I3[i*n+j+1])-set(self.I4[i*n+j+1]))})
+				self.pred[i*n+j+1] = {}
+				self.pred[i*n+j+1][6] = [4,20,25]
+				self.pred[i*n+j+1][13] = [11,18,27]
+				self.pred[i*n+j+1][21] = [3,12,19]
+				self.pred[i*n+j+1][28] = [5,10,26]
+				self.pred[i*n+j+1].update(dict([j,2] for j in [3,4,5]))
+				self.pred[i*n+j+1].update(dict([j,9] for j in [10,11,12]))
+				self.pred[i*n+j+1].update(dict([j,17] for j in [18,19,20]))
+				self.pred[i*n+j+1].update(dict([j,24] for j in [25,26,27]))
+				self.pred[i*n+j+1].update({c: c-1 for c in list(set(self.C[i*n+j+1])-set(self.I1[i*n+j+1])-set(self.I2[i*n+j+1])-set(self.I3[i*n+j+1])-set(self.I4[i*n+j+1])-set(self.M[i*n+j+1]))})
+				self.n_init[i*n+j+1] = np.zeros(len(self.C[i*n]))
+				""" if random == False:
+					# self.Demand[i*n+j+1].append([0.3*Max_Q*4]*self.T)
+					self.beta[i*n] = np.array([[0.15,0.15,0.15,0.15],[0.7,0.7,0.7,0.7],[0.15,0.15,0.15,0.15]])
+				if random == True:
+					# self.Demand[i*n] = np.random.poisson(0.3*Max_Q*4, sample_size)
+					for xi in sample_size:
+						pick_prob = np.random.rand()
+						if pick_prob < 1/3:
+							self.beta[i*n][xi] = np.array([[0.1,0.1,0.1,0.1],[0.8,0.8,0.8,0.8],[0.1,0.1,0.1,0.1]])
+						if pick_prob >= 1/3 and pick_prob < 2/3:
+							self.beta[i*n][xi] = np.array([[0.1,0.1,0.1,0.1],[0.7,0.7,0.7,0.7],[0.2,0.2,0.2,0.2]])
+						if pick_prob >= 2/3:
+							self.beta[i*n][xi] = np.array([[0.2,0.2,0.2,0.2],[0.75,0.75,0.75,0.75],[0.05,0.05,0.05,0.05]]) """
 
-for c in I1[2] + I2[2] + I3[2] + I4[2]:
-    Jam_N[2][c] = 4
-Jam_N[2][14] = 8
-Jam_N[2][27] = 8
-Jam_N[2][12] = 12
-Jam_N[2][26] = 12
-Jam_N[2][61] = 8
-
-Q[2] = Jam_N[2]/4
-Q[2][52] = 1
-for c in D[2]:
-    Q[2][c] = 99999
-Demand[2] = np.zeros(len(O[2]))
-Demand[2][0] = 180
-
-
-
-C[3] = list(range(72))
-O[3] = [26,49]
-D[3] = [48,71]
-BI[3] = [0,13]
-BO[3] = [12,25]
-I1[3] = [6,17]
-I2[3] = [7,8,18,19]
-I3[3] = [36,59]
-I4[3] = [37,38,60,61]
-V[3] = [5,16,35,58]
-M[3] = [9,20,39,62]
-beta[3] = np.array([[0.193,0.016,0.448,0.423],[0.774,0.88,0.362,0.051],[0.033,0.104,0.19,0.526]])
-proc[3]= {}
-proc[3][6] = 39
-proc[3][7] = 9
-proc[3][8] = 62
-proc[3][17] = 62
-proc[3][18] = 20
-proc[3][19] = 39
-proc[3][36] = 20
-proc[3][37] = 39
-proc[3][38] = 9
-proc[3][59] = 9
-proc[3][60] = 62
-proc[3][61] = 20
-proc[3].update({c: c+1 for c in list(set(C[3])-set(I1[3])-set(I2[3])-set(I3[3])-set(I4[3]))})
-pred[3] = {}
-pred[3][9] = [7,38,59]
-pred[3][20] = [18,61,36]
-pred[3][39] = [37,19,6]
-pred[3][62] = [8,60,17]
-pred[3].update(dict([i, 5] for i in [6,7,8]))
-pred[3].update(dict([i, 16] for i in [17,18,19]))
-pred[3].update(dict([i, 35] for i in [36,37,38]))
-pred[3].update(dict([i, 58] for i in [59,60,61]))
-pred[3].update({c: c-1 for c in list(set(C[3])-set(I1[3])-set(I2[3])-set(I3[3])-set(I4[3])-set(M[3]))})
-
-Jam_N[3] = np.zeros(len(C[3]))
-for c in O[3]+D[3]: 
-    Jam_N[3][c] = 99999
-for c in C[3][0:5] + C[3][9:16] + C[3][20:26]:
-    Jam_N[3][c] = 8
-for c in C[3][27:35] + C[3][39:48] + C[3][50:58] + C[3][62:71]:
-    Jam_N[3][c] = 4
-
-for c in I1[3] + I2[3] + I3[3] + I4[3]:
-    Jam_N[3][c] = 4
-Jam_N[3][7] = 8
-Jam_N[3][18] = 8
-Jam_N[3][5] = 12
-Jam_N[3][16] = 12
-Jam_N[3][35] = 8
-Jam_N[3][58] = 8
-
-Q[3] = Jam_N[3]/4
-Q[3][26] = 1
-Q[3][49] = 1
-for c in D[3]:
-    Q[3][c] = 99999
-Demand[3] = np.zeros(len(O[3]))
-Demand[3][0] = 174
-Demand[3][1] = 390
-
-
-
-C[4] = list(range(90))
-O[4] = [44,67]
-D[4] = [66,89]
-BI[4] = [0,22]
-BO[4] = [21,43]
-I1[4] = [3,38]
-I2[4] = [4,5,39,40]
-I3[4] = [54,77]
-I4[4] = [55,56,78,79]
-V[4] = [2,37,53,76]
-M[4] = [6,41,57,80]
-beta[4] = np.array([[0.012,0.189,0.28,0.444],[0.812,0.711,0.343,0.526],[0.176,0.1,0.377,0.03]])
-proc[4] = {}
-proc[4].update(dict([i, 6] for i in [4,56,77]))
-proc[4].update(dict([i, 41] for i in [39,79,54]))
-proc[4].update(dict([i, 57] for i in [55,40,3]))
-proc[4].update(dict([i, 80] for i in [78,5,38]))
-proc[4].update({c: c+1 for c in list(set(C[4])-set(I1[4])-set(I2[4])-set(I3[4])-set(I4[4]))})
-pred[4] = {}
-pred[4][6] = [4,56,77]
-pred[4][41] = [39,79,54]
-pred[4][57] = [55,40,3]
-pred[4][80] = [78,5,38]
-pred[4].update(dict([i, 2] for i in [3,4,5]))
-pred[4].update(dict([i, 37] for i in [38,39,40]))
-pred[4].update(dict([i, 53] for i in [54,55,56]))
-pred[4].update(dict([i, 76] for i in [77,78,79]))
-pred[4].update({c: c-1 for c in list(set(C[4])-set(I1[4])-set(I2[4])-set(I3[4])-set(I4[4])-set(M[4]))})
-
-Jam_N[4] = np.zeros(len(C[4]))
-for c in O[4]+D[4]: 
-    Jam_N[4][c] = 99999
-for c in C[4][0:2] + C[4][6:37] + C[4][41:44]:
-    Jam_N[4][c] = 8
-for c in C[4][45:53] + C[4][57:66] + C[4][68:76] + C[4][80:89]:
-    Jam_N[4][c] = 8
-
-for c in I1[4] + I2[4] + I3[4] + I4[4]:
-    Jam_N[4][c] = 4
-Jam_N[4][4] = 8
-Jam_N[4][39] = 8
-Jam_N[4][55] = 8
-Jam_N[4][78] = 8
-Jam_N[4][2] = 12
-Jam_N[4][37] = 12
-Jam_N[4][53] = 12
-Jam_N[4][76] = 12
-
-Q[4] = Jam_N[4]/4
-Q[4][44] = 2
-Q[4][67] = 2
-for c in D[4]:
-    Q[4][c] = 99999
-Demand[4] = np.zeros(len(O[4]))
-Demand[4][0] = 897
-Demand[4][1] = 432
-
-
-C[5] = list(range(104))
-O[5] = [29,58,81]
-D[5] = [28,80,103]
-BI[5] = [0]
-BO[5] = [57]
-I1[5] = [16,39]
-I2[5] = [17,18,40,41]
-I3[5] = [68,91]
-I4[5] = [69,70,92,93]
-V[5] = [15,38,67,90]
-M[5] = [19,42,71,94]   
-beta[5] = np.array([[0.05,0.068,0.226,0.717],[0.905,0.708,0.252,0.15],[0.045,0.224,0.522,0.133]])
-proc[5] = {}
-proc[5].update(dict([i, 19] for i in [17,70,91]))
-proc[5].update(dict([i, 42] for i in [40,93,68]))
-proc[5].update(dict([i, 71] for i in [69,41,16]))
-proc[5].update(dict([i, 94] for i in [92,18,39]))
-proc[5].update({c: c+1 for c in list(set(C[5])-set(I1[5])-set(I2[5])-set(I3[5])-set(I4[5]))})
-pred[5] = {}
-pred[5][19] = [17,70,91]
-pred[5][42] = [40,93,68]
-pred[5][71] = [69,41,16]
-pred[5][94] = [92,18,39]
-pred[5].update(dict([i, 15] for i in [16,17,18]))
-pred[5].update(dict([i, 38] for i in [39,40,41]))
-pred[5].update(dict([i, 67] for i in [68,69,70]))
-pred[5].update(dict([i, 90] for i in [91,92,93]))
-pred[5].update({c: c-1 for c in list(set(C[5])-set(I1[5])-set(I2[5])-set(I3[5])-set(I4[5])-set(M[5]))})
-
-Jam_N[5] = np.zeros(len(C[5]))
-for c in O[5]+D[5]: 
-    Jam_N[5][c] = 99999
-for c in C[5][0:15] + C[5][30:38] + C[5][42:58]:
-    Jam_N[5][c] = 8
-for c in C[5][19:28]:
-    Jam_N[5][c] = 12
-for c in C[5][59:67]:
-    Jam_N[5][c] = 4
-for c in C[5][71:80] + C[5][82:90] + C[5][94:103]:
-    Jam_N[5][c] = 8
-
-for c in I1[5] + I2[5] + I3[5] + I4[5]:
-    Jam_N[5][c] = 4
-Jam_N[5][17] = 12
-Jam_N[5][40] = 8
-Jam_N[5][91] = 8
-Jam_N[4][15] = 16
-Jam_N[5][38] = 12
-Jam_N[5][67] = 8
-Jam_N[5][90] = 12
-
-Q[5] = Jam_N[5]/4
-Q[5][29] = 2
-Q[5][58] = 1
-Q[5][81] = 1
-for c in D[5]:
-    Q[5][c] = 99999
-Demand[5] = np.zeros(len(O[5]))
-Demand[5][0] = 1112
-Demand[5][1] = 699
-Demand[5][2] = 765
+			self.C[(i+1)*n-1] = list(range(32))
+			self.O[(i+1)*n-1] = [9]
+			self.Demand[(i+1)*n-1] = []
+			self.D[(i+1)*n-1] = [8]
+			self.BI[(i+1)*n-1] = [0,18,25]
+			self.BO[(i+1)*n-1] = [17,24,31]
+			self.BI_IN[(i+1)*n-1] = [(i+1)*n-2, (i+2)*n-1, i*n-1]
+			self.BO_IN[(i+1)*n-1] = [(i+1)*n-2, i*n-1, (i+2)*n-1]
+			self.I1[(i+1)*n-1] = [2,13]
+			self.I2[(i+1)*n-1] = [3,4,14,15]
+			self.I3[(i+1)*n-1] = [20,27]
+			self.I4[(i+1)*n-1] = [21,22,28,29]
+			self.V[(i+1)*n-1] = [1,12,19,26]
+			self.M[(i+1)*n-1] = [5,16,23,30]
+			# self.beta[(i+1)*n-1] = np.array([[0.15,0.15,0.15,0.15],[0.7,0.7,0.7,0.7],[0.15,0.15,0.15,0.15]])
+			self.proc[(i+1)*n-1] = {}
+			self.proc[(i+1)*n-1][2] = 23
+			self.proc[(i+1)*n-1][3] = 5
+			self.proc[(i+1)*n-1][4] = 30
+			self.proc[(i+1)*n-1][13] = 30
+			self.proc[(i+1)*n-1][14] = 16
+			self.proc[(i+1)*n-1][15] = 23
+			self.proc[(i+1)*n-1][20] = 16
+			self.proc[(i+1)*n-1][21] = 23
+			self.proc[(i+1)*n-1][22] = 5
+			self.proc[(i+1)*n-1][27] = 5
+			self.proc[(i+1)*n-1][28] = 30
+			self.proc[(i+1)*n-1][29] = 16
+			self.proc[(i+1)*n-1].update({c: c+1 for c in list(set(self.C[(i+1)*n-1])-set(self.I1[(i+1)*n-1])-set(self.I2[(i+1)*n-1])-set(self.I3[(i+1)*n-1])-set(self.I4[(i+1)*n-1]))})
+			self.pred[(i+1)*n-1] = {}
+			self.pred[(i+1)*n-1][5] = [3,22,27]
+			self.pred[(i+1)*n-1][16] = [14,20,29]
+			self.pred[(i+1)*n-1][23] = [2,15,21]
+			self.pred[(i+1)*n-1][30] = [4,13,28]
+			self.pred[(i+1)*n-1].update(dict([j,1] for j in [2,3,4]))
+			self.pred[(i+1)*n-1].update(dict([j,12] for j in [13,14,15]))
+			self.pred[(i+1)*n-1].update(dict([j,19] for j in [20,21,22]))
+			self.pred[(i+1)*n-1].update(dict([j,26] for j in [27,28,29]))
+			self.pred[(i+1)*n-1].update({c: c-1 for c in list(set(self.C[(i+1)*n-1])-set(self.I1[(i+1)*n-1])-set(self.I2[(i+1)*n-1])-set(self.I3[(i+1)*n-1])-set(self.I4[(i+1)*n-1])-set(self.M[(i+1)*n-1]))})
+			self.n_init[(i+1)*n-1] = np.zeros(len(self.C[i*n]))
+			# from east to west
+			if random == False:
+				self.Demand[(i+1)*n-1].append([0.2*Max_Q]*self.T)
+			if random == True:
+				self.Demand[(i+1)*n-1].append([None]*sample_size)
+				for xi in range(sample_size):
+					if self.seed != None:
+						np.random.seed(self.seed)
+					mean = np.random.random()*0.2*Max_Q+0.1*Max_Q
+					# mean = np.random.random()*0.2*Max_Q+0*Max_Q
+					self.Demand[(i+1)*n-1][-1][xi] = np.random.poisson(mean, self.T)
+			
+		for i in range(n):	
+			self.O[i].append(self.BI[i][-1])
+			self.D[i].append(self.BO[i][-2])
+			self.BI[i].remove(self.BI[i][-1])
+			self.BO[i].remove(self.BO[i][-2])
+			self.BI_IN[i].remove(self.BI_IN[i][-1])
+			self.BO_IN[i].remove(self.BO_IN[i][-2])
+			# south and north
+			if random == False:
+				self.Demand[i].append([0.1*Max_Q]*self.T)
+			if random == True:
+				self.Demand[i].append([None]*sample_size)
+				for xi in range(sample_size):
+					if self.seed != None:
+						np.random.seed(self.seed)
+					mean = np.random.random()*0.15*Max_Q+0.2*Max_Q
+					# mean = np.random.random()*0.15*Max_Q+0.1*Max_Q
+					self.Demand[i][-1][xi] = np.random.poisson(mean, self.T)
+			# self.Demand[i].append(0.1)
+			if m > 1:
+				self.O[(m-1)*n+i].append(self.BI[(m-1)*n+i][-2])
+				self.D[(m-1)*n+i].append(self.BO[(m-1)*n+i][-1])
+				self.BI[(m-1)*n+i].remove(self.BI[(m-1)*n+i][-2])
+				self.BO[(m-1)*n+i].remove(self.BO[(m-1)*n+i][-1])
+				self.BI_IN[(m-1)*n+i].remove(self.BI_IN[(m-1)*n+i][-2])
+				self.BO_IN[(m-1)*n+i].remove(self.BO_IN[(m-1)*n+i][-1])
+			else:
+				self.O[(m-1)*n+i].append(self.BI[(m-1)*n+i][-1])
+				self.D[(m-1)*n+i].append(self.BO[(m-1)*n+i][-1])
+				self.BI[(m-1)*n+i].remove(self.BI[(m-1)*n+i][-1])
+				self.BO[(m-1)*n+i].remove(self.BO[(m-1)*n+i][-1])
+				self.BI_IN[(m-1)*n+i].remove(self.BI_IN[(m-1)*n+i][-1])
+				self.BO_IN[(m-1)*n+i].remove(self.BO_IN[(m-1)*n+i][-1])
+			if random == False:
+				self.Demand[(m-1)*n+i].append([0.1*Max_Q]*self.T)
+			if random == True:
+				self.Demand[(m-1)*n+i].append([None]*sample_size)
+				for xi in range(sample_size):
+					if self.seed != None:
+						np.random.seed(self.seed)
+					mean = np.random.random()*0.15*Max_Q+0.2*Max_Q                                  
+					# mean = np.random.random()*0.15*Max_Q+0.1*Max_Q
+					self.Demand[(m-1)*n+i][-1][xi] = np.random.poisson(mean, self.T)
+			# self.Demand[(m-1)*n+i].append(0.1)
 
 
-W=1/3
-alpha=-1.6
+		for i in range(self.N):
+			self.Jam_N[i] = np.ones(len(self.C[i]))*Max_Jam_N
+			self.Q[i] = np.ones(len(self.C[i]))*Max_Q
+			for c in self.I1[i] + self.I2[i] + self.I3[i] + self.I4[i]:
+				self.Jam_N[i][c] = Max_Jam_N/2
+				self.Q[i][c] = Max_Q/2
+			for c in self.D[i]:
+				self.Jam_N[i][c] = 1e6
+
+		# set turning ratio
+		""" f random == True:
+			ratio = np.zeros((3,4,sample_size))
+			for i in range(sample_size):
+				ratio[0,:,i] = np.repeat(np.random.uniform(0,0.2,1),4)
+				ratio[1,:,i] = np.repeat(np.random.uniform(0.6,0.8,1),4)
+				ratio[2,:,i] = 1 - ratio[0,:,i] - ratio[1,:,i]
+			for i in range(self.N):
+				self.beta[i] = ratio """
+		
+		if random == False:
+			for i in range(self.N):
+				self.beta[i] = np.zeros((3,4))
+				self.beta[i] = np.array([[0.15,0.15,0.15,0.15],[0.7,0.7,0.7,0.7],[0.15,0.15,0.15,0.15]])
+		if random == True:
+			for i in range(self.N):
+				self.beta[i] = [None]*sample_size
+				for xi in range(sample_size):
+					self.beta[i][xi] = [None]*self.T
+					for t in range(self.T):
+						if self.seed != None:
+							np.random.seed(self.seed)
+						pick_prob = np.random.rand()
+						if pick_prob < 1/3:
+							self.beta[i][xi][t] = np.array([[0.1,0.1,0.1,0.1],[0.8,0.8,0.8,0.8],[0.1,0.1,0.1,0.1]])
+						if pick_prob >= 1/3 and pick_prob < 2/3:
+							self.beta[i][xi][t] = np.array([[0.1,0.1,0.1,0.1],[0.7,0.7,0.7,0.7],[0.2,0.2,0.2,0.2]])
+						if pick_prob >= 2/3:
+							self.beta[i][xi][t] = np.array([[0.2,0.2,0.2,0.2],[0.75,0.75,0.75,0.75],[0.05,0.05,0.05,0.05]])
+
+		self.Y = 0.425
+
+
