@@ -93,8 +93,8 @@ class Network:
 				for xi in range(sample_size):
 					if self.seed != None:
 						np.random.seed(self.seed)
-					# mean = np.random.random()*0.3*Max_Q+0.2*Max_Q
-					mean = np.random.random()*0.3*Max_Q+0.1*Max_Q
+					mean = np.random.random()*0.3*Max_Q+0.2*Max_Q
+					# mean = np.random.random()*0.3*Max_Q+0.1*Max_Q
 					self.Demand[i*n][-1][xi] = np.random.poisson(mean, self.T)
 
 
@@ -255,8 +255,8 @@ class Network:
 				for xi in range(sample_size):
 					if self.seed != None:
 						np.random.seed(self.seed)
-					# mean = np.random.random()*0.2*Max_Q+0.1*Max_Q
-					mean = np.random.random()*0.2*Max_Q+0*Max_Q
+					mean = np.random.random()*0.2*Max_Q+0.1*Max_Q
+					# mean = np.random.random()*0.2*Max_Q+0*Max_Q
 					self.Demand[(i+1)*n-1][-1][xi] = np.random.poisson(mean, self.T)
 			
 		for i in range(n):	
@@ -274,8 +274,8 @@ class Network:
 				for xi in range(sample_size):
 					if self.seed != None:
 						np.random.seed(self.seed)
-					# mean = np.random.random()*0.15*Max_Q+0.2*Max_Q
-					mean = np.random.random()*0.15*Max_Q+0.1*Max_Q
+					mean = np.random.random()*0.15*Max_Q+0.2*Max_Q
+					# mean = np.random.random()*0.15*Max_Q+0.1*Max_Q
 					self.Demand[i][-1][xi] = np.random.poisson(mean, self.T)
 			# self.Demand[i].append(0.1)
 			if m > 1:
@@ -299,8 +299,8 @@ class Network:
 				for xi in range(sample_size):
 					if self.seed != None:
 						np.random.seed(self.seed)
-					# mean = np.random.random()*0.15*Max_Q+0.2*Max_Q                                  
-					mean = np.random.random()*0.15*Max_Q+0.1*Max_Q
+					mean = np.random.random()*0.15*Max_Q+0.2*Max_Q                                  
+					# mean = np.random.random()*0.15*Max_Q+0.1*Max_Q
 					self.Demand[(m-1)*n+i][-1][xi] = np.random.poisson(mean, self.T)
 			# self.Demand[(m-1)*n+i].append(0.1)
 
