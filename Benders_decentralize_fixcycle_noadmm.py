@@ -470,8 +470,8 @@ def Benders(epsilon = 0.01, num_scenario = 100, T = 20):
     return obj_array, ub_array, lb_array
     
 if __name__ == '__main__':
-    T = 50
-    num_scenario = 1
+    T = 600
+    num_scenario = 10
     obj_array, ub_array, lb_array = Benders(0.0001, num_scenario, T)
     f1 = open('H_4/T' + str(T) + '_S' + str(num_scenario) + '_obj_fixed_length_decentralize.txt', 'w+')
     f2 = open('H_4/T' + str(T) + '_S' + str(num_scenario) + '_ub_fixed_length_decentralize.txt', 'w+')
