@@ -8,6 +8,7 @@ from plot import plot_vehicle
 from tqdm import tqdm 
 
 def Out_Sample_Test_Fixed(N_edge = 4, num_scenario = 500, T = 600, file_name = "benders/T600_S10_optimal_signal_fixed_length.log"):
+    f = open('benders/T' + str(T) + '_S' + str(num_scenario) + '_out_of_sample_variant_length.txt', 'w+')
     dataset = []
     file = open(file_name, mode='r')
     for line in file:
@@ -116,13 +117,23 @@ def Out_Sample_Test_Fixed(N_edge = 4, num_scenario = 500, T = 600, file_name = "
         ctm_sub[xi] = -alpha*sum(sum((T - t) * y_value[c,t] for c in C_ALL) for t in range(T))
         delay_sub[xi] = -sum(sum(n_value[c,t] for c in D_ALL) for t in range(T))
         opt_sub[xi] = m_sub.objval
+
+        if (xi+1) % 100 == 0:
+            f = open('benders/T' + str(T) + '_S' + str(num_scenario) + '_out_of_sample_variant_length.txt', 'a+')
+            print("stage ", (xi+1)/100, file = f)
+            print("throughput term is ", (sum(delay_sub)/((xi+1)*100)), file = f)
+            print("ctm term is ", (sum(ctm_sub)/((xi+1)*100)), file = f)
+            print("objective value is ", (sum(opt_sub)/((xi+1)*100)), file = f)
+            f.close()
     
-    f = open('benders/T' + str(T) + '_S' + str(num_scenario) + '_out_of_sample_fixed_length.txt', 'w+')
-    print("throughput term is %f" % (sum(delay_sub)/num_scenario), file = f)
-    print("ctm term is %f" % (sum(ctm_sub)/num_scenario), file = f)
-    print("objective value is %f" % (sum(opt_sub)/num_scenario), file = f)
+    f = open('benders/T' + str(T) + '_S' + str(num_scenario) + '_out_of_sample_variant_length.txt', 'a+')
+    print("Final test: ", file = f)
+    print("throughput term is ", (sum(delay_sub)/num_scenario), file = f)
+    print("ctm term is ", (sum(ctm_sub)/num_scenario), file = f)
+    print("objective value is ", (sum(opt_sub)/num_scenario), file = f)
+    f.close()
 if __name__ == '__main__':
     T = 600
-    num_scenario = 2
-    file_name = "benders/T600_S10_optimal_signal_fixed_length.log"
+    num_scenario = 500
+    file_name = "benders/T600_S10_optimal_signal_variant_length.log"
     Out_Sample_Test_Fixed(N_edge, num_scenario, T, file_name)
