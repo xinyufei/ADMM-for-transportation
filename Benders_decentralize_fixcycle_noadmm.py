@@ -304,7 +304,7 @@ def Benders(epsilon = 0.01, num_scenario = 100, T = 20):
             if num_ite>0:
                 lb_array.append(m_master_obj)
             if ub > sum(lb_sub)/num_scenario:
-                ub = sum(opt_sub)/num_scenario
+                ub = sum(lb_sub)/num_scenario
                 for i in range(N):
                     l_optimal[i] = l_tilde[i]
                     o_optimal[i] = o_tilde[i]
