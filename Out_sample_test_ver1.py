@@ -8,7 +8,7 @@ from plot import plot_vehicle
 from tqdm import tqdm 
 
 def Out_Sample_Test_Fixed(N_edge = 4, num_scenario = 500, T = 600, file_name = "H_4/T600_S10_optimal_signal_fixed_length.log"):
-    f = open('H_4/T' + str(T) + '_S' + str(num_scenario) + '_out_of_sample_fixed_length_decentralize.txt', 'w+')
+    f = open('H_4/T' + str(T) + '_S' + str(num_scenario) + '_out_of_sample_fixed_length_admm.txt', 'w+')
     dataset = []
     file = open(file_name, mode='r')
     for line in file:
@@ -119,14 +119,14 @@ def Out_Sample_Test_Fixed(N_edge = 4, num_scenario = 500, T = 600, file_name = "
         opt_sub[xi] = m_sub.objval
 
         if (xi+1) % 100 == 0:
-            f = open('H_4/T' + str(T) + '_S' + str(num_scenario) + '_out_of_sample_fixed_length_decentralize.txt', 'a+')
+            f = open('H_4/T' + str(T) + '_S' + str(num_scenario) + '_out_of_sample_fixed_length_admm.txt', 'a+')
             print("stage ", (xi+1)/100, file = f)
             print("throughput term is ", (sum(delay_sub)/((xi+1)*100)), file = f)
             print("ctm term is ", (sum(ctm_sub)/((xi+1)*100)), file = f)
             print("objective value is ", (sum(opt_sub)/((xi+1)*100)), file = f)
             f.close()
     
-    f = open('H_4/T' + str(T) + '_S' + str(num_scenario) + '_out_of_sample_fixed_length_decentralize.txt', 'a+')
+    f = open('H_4/T' + str(T) + '_S' + str(num_scenario) + '_out_of_sample_fixed_length_admm.txt', 'a+')
     print("Final test: ", file = f)
     print("throughput term is ", (sum(delay_sub)/num_scenario), file = f)
     print("ctm term is ", (sum(ctm_sub)/num_scenario), file = f)
@@ -135,5 +135,5 @@ def Out_Sample_Test_Fixed(N_edge = 4, num_scenario = 500, T = 600, file_name = "
 if __name__ == '__main__':
     T = 600
     num_scenario = 500
-    file_name = "H_4/T600_S10_optimal_signal_fixed_length_decentralize.log"
+    file_name = "H_4/T600_S10_optimal_signal_fixed_length_admm.log"
     Out_Sample_Test_Fixed(N_edge, num_scenario, T, file_name)
