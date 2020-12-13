@@ -1,0 +1,3 @@
+throughput term is -1633281.236089
+ctm term is -34724.466693
+objective value is -1668005.702783
